@@ -413,7 +413,7 @@ imp.show()
 ImagePlus (ImageJ API)
 https://imagej.net/ij/developer/api/ij/ij/ImagePlus.html
 
-<img src="/Users/miura/Dropbox/20230200_Yodosha/jikken_igaku2023/fig/JAVADOC_ImagePlus.png" alt="image-20231016184429228" style="zoom:50%;" />
+<img src="fig/JAVADOC_ImagePlus.png" alt="image-20231016184429228" style="zoom:50%;" />
 
 このページを開くと、少し下にスクロールしただけでも膨大な情報量があることがわかり「困ったな」と思う方が多いかもしれない。しかし、ここに記載されているすべてが、画像オブジェクトが持っているさまざまな機能である。「未知の機能がいろいろあるに違いない！」と、ぜひともポジティブに捉えてほしい。
 
@@ -437,13 +437,13 @@ from ij import ImagePlus
 
 ImagePlusのJavadocを少し下にスクロールしてゆくと、"Fields"とオレンジでハイライトされた部分になる。3列の表になっており、右から型名とアクセス（後述）、フィールド名（日本語で"フィールド値"などともよばれるが、なんらかの属性を保持する変数群である。）、概要、がかかれている。
 
-![image-20231016184815512](/Users/miura/Dropbox/20230200_Yodosha/jikken_igaku2023/fig/JAVADOC_ImagePlus_FIelds.png)
+![image-20231016184815512](fig/JAVADOC_ImagePlus_FIelds.png)
 
 
 
 たとえば、ImagePlusにはフィールド値のひとつにroiという変数があるが、これは画像上に設置した選択領域(ROI)を保持する変数であることが、roiというフィールド名の左側にある型の名前ROIから推測できる。
 
-![image-20231016185405908](/Users/miura/Dropbox/20230200_Yodosha/jikken_igaku2023/fig/JAVADOC_ImagePlus_roi.png)
+![image-20231016185405908](fig/JAVADOC_ImagePlus_roi.png)
 
 ただし、その型名の前には、"protected"とある。これは、外部からのそのフィールド値へのアクセシビリティを示しており、protectedの場合は、外部のスクリプトやJavaコードからは直接使うことができないようになっている。このようなフィールド値は、多くの場合、下に説明するメソッドを経由して値やオブジェクトを取得することができる場合が多い。この取得方法は後述する。
 
@@ -453,7 +453,7 @@ ImagePlusのJavadocを少し下にスクロールしてゆくと、"Fields"と�
 
 Javadocのフィールドのリストからページをさらに下にスクロールすると、これらのコンストラクタのリストがある。
 
-![image-20231016190628245](/Users/miura/Dropbox/20230200_Yodosha/jikken_igaku2023/fig/JAVADOC_ImagePlus_Constructors.png)
+![image-20231016190628245](fig/JAVADOC_ImagePlus_Constructors.png)
 
 1番最初の行が最も基本的な形式の、引数がないコンストラクタである。私の経験では、ImagePlusでこの形式のコンストラクタを使うことは殆どない。ただし、これはImagePlusに特殊な事情であって、他のクラスの場合には、引数のないコンストラクタしかない場合もある。二行目のコンストラクタは引数に画像のファイルパスの文字列を与えるコンストラクタである。これはすでにインスタンス化について解説した際のコード例でも使ったコンストラクタである。このJavadocを見て、引数が文字列の型であることは、`java.lang.String`という型名から知ることができる。また、その文字列が画像のファイルパスであることは、変数の名前`pathOrURL`から推測することができる。変数の名前がこのように説明的に命名してあれば、その引数がどのようなものであるか推測が付く場合が多いが、不親切な開発者の場合には、こうした説明的な変数ではない場合（たとえば`pp`など）もある。この場合には、実際に自分でスクリプトを書き、それらしいと思われるオブジェクトを引数にしてインスタンス化を行ってテストし、うまくいったら、OK、というように試行錯誤が必要になるが、なれるとあまり迷わずに、この変数はこれだろう、と推測がつくようになる。こうした引数の型と、そこにどのようなオブジェクトを与えるか、というのは、後に説明する関数（メソッド）の場合も同じように、推測とテストが必要になる。
 
@@ -465,7 +465,7 @@ Javadocのフィールドのリストからページをさらに下にスクロ�
 
 コンストラクタの表からさらに下にスクロールすると、メソッドの表がはじまる。
 
-![image-20231017163233362](/Users/miura/Dropbox/20230200_Yodosha/jikken_igaku2023/fig/JAVADOC_ImagePlus_Methods.png)
+![image-20231017163233362](fig/JAVADOC_ImagePlus_Methods.png)
 
 表の一列目は、関数（メソッド）の返り値の型、およびその関数へのアクセスである。2列目は関数名（メソッドの名前）、3列目はそのメソッドの簡単な説明である。
 
@@ -489,13 +489,13 @@ imp.show()
 ```
 画像が開いたら、マウスを使って次のように矩形ROIを設置する。
 
-![image-20231017165525033](/Users/miura/Dropbox/20230200_Yodosha/jikken_igaku2023/fig/blobWithROI.png)
+![image-20231017165525033](fig/blobWithROI.png)
 
 
 
 このROIの座標と、大きさを出力する、という目的でスクリプトを書くには、まずImagePlusのメソッドに、設置されたROIのオブジェクトを取得するメソッドがないか、探してみる。すでに、上でフィールド値に`roi`が存在していることは確認済みであるが、このフィールド値は`protected`であり、直接使うことができない。そこで、methodで返り値がROIのオブジェクトであるようなものを目をサラにして探してみる。すると`getROI()`というメソッドがあることがわかる。「おそらくこれだな」ということで、スクリプトを書き始める。
 
-![image-20231017165953356](/Users/miura/Dropbox/20230200_Yodosha/jikken_igaku2023/fig/JAVADOC_ImagePlus_getROI.png)
+![image-20231017165953356]( fig/JAVADOC_ImagePlus_getROI.png)
 
 次のようになる。
 
