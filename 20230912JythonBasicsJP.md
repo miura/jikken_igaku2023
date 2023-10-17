@@ -2,7 +2,7 @@
 
 三浦耕太
 
-last update:2023.09.12 「ImageJではじめる生物画像解析」のサポートサイトに掲載したかなりラフな解説を大幅にアップデートして、GitHubに移植しました。なお、この解説は2012年頃の「少数性生物学」のワークショップに向けて用意した講習が最初のバージョンになります。当時、機会を作っていただいた大阪大学の永井さんにここに感謝します。
+last update:2023.10.17 「ImageJではじめる生物画像解析」のサポートサイトに掲載したかなりラフな解説を大幅にアップデートして、GitHubに移植しました。なお、この解説は2012年頃の「少数性生物学」のワークショップに向けて用意した講習が最初のバージョンになります。当時、機会を作っていただいた大阪大学の永井さんにここに感謝します。
 
 ## 序論
 
@@ -404,7 +404,39 @@ imp.show()
 
 ---
 
+### オブジェクトの非同一性
 
+では次に、同一の保存データから２つのImagePlusオブジェクトを作ってみよう。以下のコードになる。
+
+```python
+from ij import ImagePlus
+imp = ImagePlus( "/Users/miura/blobs.tif" )
+imp2 = ImagePlus( "/Users/miura/blobs.tif" )
+imp.show()
+imp2.show()
+```
+
+先程のコードに、２行追加して（コピペである）、追加した行の変数を`imp2`にしただけであるが、実行すると、同じ画像がふたつモニタ上に描画されるだろう。画像自体は同じファイルからインスタンス化をおこなったのでまったく同じなのであるが、オブジェクトとしては別のものである。このことを確認するために次の２行を追記し、実行して出力パネルを眺めてみると良い。
+
+```python
+print(imp.__hash__())
+print(imp2.__hash__())
+```
+
+出力パネルには次のような数字が２行出力されるはずである。
+
+![image-20230922010056178](fig/hashcodes.png)
+
+これらの数字はハッシュコードといい、オブジェクトそれぞれに固有に与えられたいわばID番号である。なお、それぞれが実行したときには毎回、任意のハッシュコードが与えられるので、上の数字とはことなっているであろう。一行目が最初にインスタンス化したImagePlusオブジェクト、二行目が二番目にインスタンス化したImagePlusオブジェクトであり、これらのオブジェクトが固有のものであることが確認できる。
+
+<!--
+注記　\_\_hash_\_()メソッドはJython特有のJavaオブジェクトをラップするPyObjectにのみ実装された特殊なメソッドで、ImagePlusのメソッドではない。Javaのメソッドでハッシュコードを得るには
+from java.lang import System
+print(System.identityHashCode(imp))
+print(System.identityHashCode(imp2))
+とする
+PyObject https://www.javadoc.io/static/org.python/jython-standalone/2.7.1/org/python/core/PyObject.html
+-->
 
 ### クラスの見取り図、Javadoc 
 
@@ -417,7 +449,7 @@ https://imagej.net/ij/developer/api/ij/ij/ImagePlus.html
 
 このページを開くと、少し下にスクロールしただけでも膨大な情報量があることがわかり「困ったな」と思う方が多いかもしれない。しかし、ここに記載されているすべてが、画像オブジェクトが持っているさまざまな機能である。「未知の機能がいろいろあるに違いない！」と、ぜひともポジティブに捉えてほしい。
 
-####　クラス名
+#### クラス名
 
 さて、これまで解説してきたことが、このJavadocの中のどこに対応するのか、見ていこう。まず、「クラス」である。これは、最初のところに、どーん、と大きなフォントで"Class ImagePlus"と書かれている。すなわち、このページはImagePlusクラスに関するJavadoc、ということである。
 
@@ -433,7 +465,7 @@ from ij import ImagePlus
 
 が理解できるのではないだろうか。スクリプトの中で使うクラスを特定するため、「パッケージijから、ImagePlusクラスをインポートせよ」、すなわちここで使うImagePlusはパッケージijのものである、と宣言しているのである。
 
-#### フォールド
+#### フィールド
 
 ImagePlusのJavadocを少し下にスクロールしてゆくと、"Fields"とオレンジでハイライトされた部分になる。3列の表になっており、右から型名とアクセス（後述）、フィールド名（日本語で"フィールド値"などともよばれるが、なんらかの属性を保持する変数群である。）、概要、がかかれている。
 
@@ -463,15 +495,14 @@ Javadocのフィールドのリストからページをさらに下にスクロ�
 
 #### メソッド
 
-コンストラクタの表からさらに下にスクロールすると、メソッドの表がはじまる。
+さて、いよいよメソッドである。コンストラクタの表からさらに下にスクロールすると、メソッドの表がはじまる。
 
 ![image-20231017163233362](fig/JAVADOC_ImagePlus_Methods.png)
 
 表の一列目は、関数（メソッド）の返り値の型、およびその関数へのアクセスである。2列目は関数名（メソッドの名前）、3列目はそのメソッドの簡単な説明である。
 
-表の眺め方を解説しよう。解説一列目の型名は、`void`と書いてある場合は返り値が存在しない、ということを意味している。例えば、3行目の`close()`メソッドは、頻繁に使うメソッドで、表示している画像を閉じるメソッドである。このメソッドに返り値がなく`void`なのは、なにも返り値を与える必要がないから、なのは自明であろう。4行目のメソッド`convertIndexToPosition`の返り値は`int[]`と書いてあり、これはint型の配列が返り値であることを意味している。5行目の関数`convertToImageProcessor`の場合は、返り値が`ImageProcessor`となっており、関数の返り値がImageProcessorオブジェクトであることを示している。
-
-また、この5行名には`static`とも書いてある。これは返り値ではなく、関数が静的メソッド（static method）であることを示している。静的メソッドである関数は、ImagePlusをインスタンス化したオブジェクトなしでそのまま使うことができる。たとえば、上のキャプチャ画像にある`convertToImageProcessor(java.awt.image.BufferedImage img, int band)`
+表の眺め方を解説しよう。一列目の型名を眺めると、`void`と書いてあるものがおおい。これは返り値が存在しない、ということを意味している。例えば、3行目の`close()`メソッドは、頻繁に使うメソッドであり、表示している画像を閉じるメソッドである。このメソッドの返り値は`void`となっている。単に画像を閉じるだけなので、なにも返り値を与える必要がないのは自明であろう。4行目のメソッド`convertIndexToPosition`の返り値は`int[]`と書いてあり、これはint型の配列が返り値であることを意味している。
+5行目の関数`convertToImageProcessor`の場合は、返り値が`ImageProcessor`となっており、関数の返り値がImageProcessorオブジェクトであることを示している。また、この5行目には`static`とも書いてある。これは返り値の型名ではない。関数が静的メソッド（static method）であることを示している。こうした関数は、ImagePlusをインスタンス化せずにダイレクトにそのまま使うことができる。
 
 なるメソッドにはstaticという記号がつけられている。この関数は
 
@@ -479,103 +510,196 @@ Javadocのフィールドのリストからページをさらに下にスクロ�
 
 というように、インスタンス化せず、クラス名に直接ドットをつけて関数名を書くことで使うことができる。静的メソッドに関しては、もうすこし詳しい解説を後に行うつもりである。
 
+##### Javadocを読み解く：画像のサイズ
 
+ImagePlusのメソッドで頻繁に使う関数として`getWidth()`と`getHeight()`がある。下には`getHeight()`の部分だけ示す。
 
-さて、もうすこし具体的にJavadocを使ったスクリプティングの例を上げてみる。まず、すでに使ったコードで、サンプル画像を開こう。
+![image-20231017223857690](fig/JAVADOC_ImagePlus_getheight.png)
+
+実際に使ってみよう。まず、すでに使ったコードで、サンプル画像を開き（下のコード3行目まで）、画像の幅と高さをコンソールに出力する（４−５行目）。
+
 ```python
 from ij import ImagePlus
 imp = ImagePlus( "/Users/miura/blobs.tif" )
 imp.show()
+print( imp.getWidth() )
+print( imp.getHeight() )
 ```
-画像が開いたら、マウスを使って次のように矩形ROIを設置する。
+
+出力結果は下のようになるはずである。
+
+<img src="/Users/miura/Library/Application Support/typora-user-images/image-20231017224300165.png" alt="image-20231017224300165" style="zoom:50%;" />
+
+幅が256画素、高さが254画素であることがわかる。オブジェクトからなんらかの情報や、その一部であるオブジェクトを取得する関数は、たいていの場合"get"ではじまるメソッド名であることがおおい。逆に、オブジェクトの属性を設定したり、あるいは他のオブジェクトを付け加える場合には、"set"ではじまる関数であることが多い。ただし、これは一般的な傾向であり、きまりがあるわけではない。
+
+---
+
+**演習**　上のコードに追記し、画像のビット深度(bit depth)を出力するようにせよ。使うメソッドは、Javadocで探し当てることができる。
+
+---
+
+
+
+##### Javadocを読み解く：Roiのメソッド
+
+さて、もうすこし複雑な、Javadocを使いながらスクリプティングを行う例を示してみよう。先ほどのスクリプトの一部を使い（あるいは、ファイルをドラッグドロップでもよい）画像が開いたら、マウスを使って次のように矩形ROIを設置する。
 
 ![image-20231017165525033](fig/blobWithROI.png)
 
-
-
-このROIの座標と、大きさを出力する、という目的でスクリプトを書くには、まずImagePlusのメソッドに、設置されたROIのオブジェクトを取得するメソッドがないか、探してみる。すでに、上でフィールド値に`roi`が存在していることは確認済みであるが、このフィールド値は`protected`であり、直接使うことができない。そこで、methodで返り値がROIのオブジェクトであるようなものを目をサラにして探してみる。すると`getROI()`というメソッドがあることがわかる。「おそらくこれだな」ということで、スクリプトを書き始める。
+このROIの座標や大きさ大きさを調べて出力する、という目的でスクリプトを書いてみよう。まずImagePlusのメソッドに、設置されたROIのオブジェクトを取得するメソッドがないか、探してみる。すでに、上でフィールド値に`roi`が存在していることは確認済みであるが、このフィールド値は`protected`であり、直接使うことができない。そこで、methodで返り値がROIのオブジェクトであるようなものを目をサラにして探してみる。すると`getROI()`というメソッドがあることがわかる。
 
 ![image-20231017165953356]( fig/JAVADOC_ImagePlus_getROI.png)
 
-次のようになる。
+このメソッドでRoiクラスのオブジェクト、すなわち現在画像に設置されている矩形選択領域のオブジェクトをえることができる。そこでさらに、Roiオブジェクトから、その位置や大きさをどのようにして知ったらよいのだろうか、という疑問がわくので、上のgetRoi()の返り値のRoiというリンクをクリックする。すると次のようなページになる。
+
+Roi (ImageJ API)
+https://imagej.net/ij/developer/api/ij/ij/gui/Roi.html
+
+![image-20231017213037926](fig/JAVADOC_Roi.png)
+
+このページを眺めて、位置やサイズを取得することができるようなフィールド値や、メソッドがないか探してみる。願わくば、フィールド値に位置の座標やRoiの大きさの変数があればよいのだが、みつからないはずである。さらにメソッドを眺めて、getX()、getSize()、getWidth()など使えそうな関数がないか調べるが、これも存在しない。さらによく探すと、`getBounds()`という関数があり、解説には`Returns this selection's bounding rectangle.`とある。返り値もjava.awt.Rectangleという型であり、なにやらここからRoiの位置情報を得ることができそうである。そこで、java.awt.RectangleのJavadocを探してみると（Javaの機能はjava.xxxのように、javaからはじまるパッケージ名であり、これらの機能はjavaの中心的な機能なので、ネイティブ関数などと呼ばれる）、ネットですぐにみつかる。以下のようなページである。
+
+Rectangle (Java Platform SE 8 )
+https://docs.oracle.com/javase/8/docs/api/java/awt/Rectangle.html
+
+![image-20231017213836497](fig/JAVADOC_javaawtrectangle.png)
+
+このクラスのフィールド値を眺めると（下の図）、おお、Roiの座標と大きさが得られそうだ、と判明する。
+
+![image-20231017215231660](fig/JAVADOC_javaawtrectangle_Fields.png)
+
+Javadocからえられた以上の情報をもとに、スクリプトを書き始める。次のようになる。
 
 ```python
 from ij import IJ
 
 imp = IJ.getImage()
 aroi = imp.getRoi()
+bounds = aroi.getBounds()
+print( "x " + str(bounds.x))
+print( "y " + str(bounds.y))
+print( "width " + str(bounds.width))
+print( "height " + str(bounds.height))
 ```
 
-3行目のIJ.getImage()は、現在アクティブな画像のImagePlusオブジェクトを得るためのIJクラスのメソッドである。このImagePlusオブジェクトに先ほどみつけたgetRoi()メソッドを使って、aroiという変数にroiオブジェクトを代入している。ここで、ROIオブジェクトの使い方を知るため、上のImagePlusクラスのJavadocにあるgetROI()の解説の行の返り値であるROIは、ウェブページでリンクが張ってあるのでそれをクリックする。
+3行目のIJ.getImage()は、現在アクティブな画像のImagePlusオブジェクトを得るためのIJクラスのメソッドである。4行目では、このImagePlusオブジェクトに先ほど見出した`getRoi()`メソッドを使って、`aroi`という変数にroiオブジェクトを代入している。5行目ではさらに、Roiクラスのメソッドである`getBounds()`を使い、`java.awt.Rectangle`のオブジェクトを得て、変数`bounds`に代入する。6行目から9行目は、`bounds.x`のように、直接フィールド値を呼び出せば、作成した矩形選択領域の左上角の座標や、幅と高さを得て出力することができる。なお、`bound.x`などの数値の型（numerics、ここではそのうちint型）は、文字列に付け加える際に、文字型（String）に変換する必要がある。このため、`str(bounds.x)`のように、Jythonのネイティブ関数である`str`を使って、数値型を文字型に変換する。
 
-すると、ROIオブジェクトのフィールド値や、メソッドを知ることができる。
+---
 
+**演習**　上のコードに変更し、矩形選択領域を画像の右上にぴったりと収まるように位置を変更せよ。Roiクラスには、矩形選択領域の左上の座標を設定し直すメソッドがある。また、変更後にはImagePlusクラスのメソッド、`updateAndDraw()`を使って、表示を再描画する必要がある。
 
-
-
-
+---
+<!--
+from ij import IJ
+imp = IJ.getImage()
+aroi = imp.getRoi()
+aroi.setLocation(0, 0)
+imp.updateAndDraw()
+-->
 
 ### 静的メソッド
 
-IJクラスのメソッドはほとんどが「静的」である。これは、クラスをインスタンス化しなくても、そのメソッドを使えることを意味している。インスタンス化とは、いわばそのクラスのスペックを鋳型とするクローンを作ることを意味しており、いくつも似たようなクローンを作ることができる。たとえば、ImageJでは、画像はすべてImagePlusというクラスのインスタンスである。ことなる画像であっても、同じクラスに属している、ということである。画像の大きさはことなっていいても、幅と高さという属性をいずれも所持しており、こうした点において「同じクラス」なのである。
+Javadocのメソッドの解説で少々触れたが、返り値に`static`とつけられているメソッドは、「静的」メソッドであり、クラスをインスタンス化せずに使うことができる。こうした静的メソッドは、いわば純粋な関数ともいえる。こうしたメソッドは、特にIJクラスで多く実装されている。Javadocは以下のリンク先でみることができる。
 
-すでに最初の方で行った次のコード
+IJ (ImageJ API)
+https://imagej.net/ij/developer/api/ij/ij/IJ.html
+
+すでに最初の方で紹介した次のコードにある`openImage()`メソッドもまた、そうした静的メソッドの1つである。
 
 ```python
 imp = IJ.openImage('/Users/miura/image.tif')
 ```
 
+他にも、すでに紹介したコードで
 
-
-#### 他のクラス
-
-
-
-### オブジェクトの非同一性
-
-では次に、同一の保存データから２つのImagePlusオブジェクトを作ってみよう。以下のコードになる。
-
-```python
-from ij import ImagePlus
-imp = ImagePlus( "/Users/miura/blobs.tif" )
-imp2 = ImagePlus( "/Users/miura/blobs.tif" )
-imp.show()
-imp2.show()
 ```
-先程のコードに、２行追加して（コピペである）、追加した行の変数を`imp2`にしただけであるが、実行すると、同じ画像がふたつモニタ上に描画されるだろう。画像自体は同じファイルからインスタンス化をおこなったのでまったく同じなのであるが、オブジェクトとしては別のものである。このことを確認するために次の２行を追記し、実行して出力パネルを眺めてみると良い。
-```python
-print(imp.__hash__())
-print(imp2.__hash__())
+imp = IJ.getImage()
 ```
 
-出力パネルには次のような数字が２行出力されるはずである。
+もあった。この他にも、実に多様な機能をもつ静的メソッドがIJクラスには存在しており、コンビニのように便利なクラスである。膨大な数のメソッドが実装されているが、一度丁寧に眺めておくと、「あれがIJクラスにはあったな」という形で使うことができるだろう。
 
-![image-20230922010056178](fig/hashcodes.png)
+```python
+IJ.beep()
+```
 
-これらの数字はハッシュコードといい、オブジェクトそれぞれに固有に与えられたいわばID番号である。なお、それぞれが実行したときには毎回、任意のハッシュコードが与えられるので、上の数字とはことなっているであろう。一行目が最初にインスタンス化したImagePlusオブジェクト、二行目が二番目にインスタンス化したImagePlusオブジェクトであり、これらのオブジェクトが固有のものであることが確認できる。
+IJクラスの中のひとつのメッソッドが`beep()`であり、これを実行すると音がなる。
 
-<!-- 
+一方、静的ではないメソッド、たとえば、ImagePlusクラスの`getWidth()`は、インスタンス化されたオブジェクト（この場合、画像であるが）においてのみ、意味をもつメソッドであり、たんにImagePlus.getMethod()と行っても、画像自体が存在しないが故に機能しない。実はこのように、ImageJをライブラリとしてみたときにはオブジェクトの存在を前提とするメソッドがほとんどであることは留意しておいたほうがよい。
 
-注記　\_\_hash_\_()メソッドはJython特有のJavaオブジェクトをラップするPyObjectにのみ実装された特殊なメソッドで、ImagePlusのメソッドではない。Javaのメソッドでハッシュコードを得るには
+### コマンドレコーダ
 
-from java.lang import System
-print(System.identityHashCode(imp))
-print(System.identityHashCode(imp2))
-
-とする。
-
-PyObject
-
-https://www.javadoc.io/static/org.python/jython-standalone/2.7.1/org/python/core/PyObject.html
+(さらに追記の予定)
+`IJ.run()`メソッドは、メニューの項目を指定して実行する。二番目の引数であるオプションは、通常であればダイアログボックスで入力する内容を指定する。
 
 
+---
 
--->
+**演習**　ImageJのバージョンを出力するコードを書け。このメソッドはIJクラスに見出すことができる。
+
+---
 
 
+###  クラスの使い方：実践編
+####  ImagePlusクラス
 
+`ImagePlus`はすでに紹介したように、画像そのものと画像の属性（スケールやmultitiff）などを含むクラスである。また、これは慣例的なことであるが、変数は`imp`とすることが多い。次のコードは、デスクトップ上に開いたスタック画像に関して、ループを使ってスタックの中の画像を一枚ごとに測定を行うコードである。
+
+```python
+imp = IJ.getImage()
+frames = imp.getStackSize()
+IJ.run("Set Measurements...", " mean redirect=None decimal=3")
+IJ.run("Clear Results")
+for i in range(frames):
+	imp.setSlice(i + 1)
+	IJ.run("Measure")
+```
+
+#### ImageProcessorクラス
+
+`ImageProcessor`は、`ImagePlus`の属性の一部であり、画像そのもののクラスである。さまざまな画像処理のアルゴリズムをメソッドとして所持している。実際にフィルタをかけたりするのはこのクラスのオブジェクトで行う。スタック画像の場合、`ImagePlus`のオブジェクトの中に複数の`ImageProcessor`オブジェクトが入っている、とかんがえるとよいだろう。ImageProcessorでは画像処理に関するさまざまなメッソドを使うことができる。
+
+(使用例、画像の反転)
+
+Javaのプログラミングを知っている方のためにより詳細を述べると、ImageProcessorは抽象クラスであり、実装はByteProcessor, ColorProcessor, FloatProcessor, ShortProcessorという4つのクラスで行われている。画像のビット深度によって特異的に使うことのできるメソッドがあるので、この点、念頭に置いておくとよい。
+
+#### ChannelSplitterクラス
+
+TBA
+
+#### ProfilePlotクラス: 輝度プロファイルの例
+
+輝度プロファイルを得る場合には`ProfilePlot`クラスをインスタンス化する必要がある。このインスタンス化の際に、現在トップにある画像を指定すれば、そのまま輝度プロファイルを取得することができる。
+```python
+from ij import IJ
+from ij.gui import ProfilePlot
+imp = IJ.getImage()
+pf = ProfilePlot(imp)
+profile = pf.getProfile()
+for val in profile:
+	print val
+```
+このスクリプトの結果をさらにCSVに出力してみる。Jythonの`csv`パッケージが簡便なのでそれを使おう。
+```python
+from ij import IJ
+from ij.gui import ProfilePlot
+import csv
+imp = IJ.getImage()
+pf = ProfilePlot(imp)
+profile = pf.getProfile()
+for val in profile:
+	print val
+	
+f = open('/Users/miura/Desktop/prof.csv', 'wb')
+writer = csv.writer(f)
+for index, val in enumerate(profile):
+	writer.writerow(\[index, val\])
+	
+f.close()
+```
 
 ## 自作関数
+
+TBA
 
 ## ファイルシステムへのアクセス
 
@@ -605,76 +729,6 @@ srcDir = dc.getDirectory()
 
 `os.walk`の結果を`for`ループで展開するのは、ディレクトリを再帰的に探索するためである。
 
-### IJクラス -静的メソッド
+## JythonのリストをJavaの配列に変換する手法
 
-IJクラスには静的（Static, スタティック）なメソッドが多くリストされている。クラスとは、機能（メソッドと呼ばれる）や変数（フィールドと呼ばれる）をまとめたひとつのまとまりである。たとえば
-```python
-IJ.beep()
-```
-は、IJクラスの中のひとつのメッソッドが`beep()`であり、これを実行すると音がなる。
-
-
-
-### コマンドレコーダ
-
-`IJ.run()`メソッドは、メニューの項目を指定して実行する。二番目の引数であるオプションは、通常であればダイアログボックスで入力する内容を指定する。
-
-###  ImagePlusクラス
-
-`ImagePlus`は画像そのものと画像の属性（スケールやmultitiff）などを含むクラスである。デスクトップに開いた画像オブジェクトをグラブする際にも`ImagePlus`のオブジェクトを取得することになる。またこれは慣例的なことであるが、変数は`imp`とすることが多い。
-```python
-imp = IJ.getImage()
-frames = imp.getStackSize()
-IJ.run("Set Measurements...", " mean redirect=None decimal=3")
-IJ.run("Clear Results")
-for i in range(frames):
-	imp.setSlice(i + 1)
-	IJ.run("Measure")
-```
-このコードはデスクトップ上に開いているスタックを画像オブジェクト`imp`としてグラブし、そのスライスを一枚一枚めくりながら測定を行う。
-
-### ImageProcessorクラス
-
-`ImageProcessor`は、`ImagePlus`の属性の一部であり、画像そのもののクラスである。さまざまな画像処理のアルゴリズムをメソッドとして所持している。実際にフィルタをかけたりするのはこのクラスのオブジェクトで行う。スタック画像の場合、`ImagePlus`のオブジェクトの中に複数の`ImageProcessor`オブジェクトが入っている、とかんがえるとよいだろう。
-
-
-
-### JythonのリストをJavaの配列に変換する手法
-
-
-
-
-
-### 輝度プロファイルの例
-
-輝度プロファイルを得る場合には`ProfilePlot`クラスをインスタンス化する必要がある。このインスタンス化の際に、現在トップにある画像を指定すれば、そのまま輝度プロファイルを取得することができる。
-```python
-imp = IJ.getImage()
-pf = ProfilePlot(imp)
-profile = pf.getProfile()
-for val in profile:
-	print val
-```
-このスクリプトの結果をさらにCSVに出力してみる。Jythonの`csv`パッケージが簡便なのでそれを使おう。
-```python
-import csv
-imp = IJ.getImage()
-pf = ProfilePlot(imp)
-profile = pf.getProfile()
-for val in profile:
-	print val
-	
-f = open('/Users/miura/Desktop/prof.csv', 'wb')
-writer = csv.writer(f)
-for index, val in enumerate(profile):
-	writer.writerow(\[index, val\])
-	
-f.close()
-```
-標準でロードされないパッケージは、上記のように`import`で明示的にロードする必要がある。ImageJのクラスもおなじように`import文で宣言する必要がある。
-
-<!-- fiji test.py ないしは jython test.py
-
-といった使い方をする場合には、インポート文を加えておく必要があるので要注意である。
--->
-このサイトのすべての記事の著作権は著者に帰属します。
+TBA
