@@ -10,9 +10,14 @@ ImageJには独自のマクロ言語が実装されており、多くの作業�
 
 ImageJにおけるスクリプティング言語としては他にGroovy、Jython (Javaで実装したPython)、Javascript(Rhino)、BeanShellなどがある。処理速度を高めたいならば、ClojureもしくはScalaを使うが、2023年現在、これらを使っている人は稀である。型を正確に記述したいならGroovyがお勧めである。JavascriptはFijiではなくともImageJでそのまま使うことが出来る。また、Javascriptはコマンドレコーダの記録言語としても実装されており、マクロと同じように記述することができる。ただしこの場合の運用は、マクロと同程度の機能に限られるので、Javadocを駆使しながらコーディングを行うのでないならば（Javadocについては後述する）マクロでプログラムを書くことをお勧めする。
 
-JythonはPythonの文法であること、Jython自体に実装されているPython由来のさまざまな便利な機能があることから（特に文字列操作、ファイルシステムへのIOにおいてさまざまなメリットがある）、Jythonを使う研究者が多い。ImageJではJythonのファイルを実行した時にJythonのライブラリが存在しないことがわかると、ImageJはJythonのライブラリを自動的にダウンロードする。一方、Fijiでは最初からJythonが導入されている。以下ではFijiを使っていることを前提に説明をすすめる。理由は、コードを書いて実行する上できわめて優れた機能をもつエディタ（Script Editor）がFijiには付属しているからである。
+JythonはPythonの文法であること、Jython自体に実装されているPython由来のさまざまな便利な機能があることから（特に文字列操作、ファイルシステムへのIOにおいてさまざまなメリットがある）、Jythonを使う研究者が多い。また、昨今では（2023年10月の時点で）、Pythonの環境で作動するnapariにPyImageJというプラグインが公開されており、ImageJが作動しているJavaの環境で提供されている膨大な数のプラグインを、napariで使うことができるようになっている。このPyImageJを使う上で、ImageJをライブラリとして使う知識は必須なる。つまり、JythonでFijiを扱う手法を学べば、napariでPyImageJを使うことを学ぶことにもなる。これができれば、歴史的に蓄積されたImageJのプラグインと、Pythonのさまざまなライブラリを同時に使うことが可能になるのである。
 
-今回はJythonによるスクリプティングを学ぶ。ImageJのさまざまなクラス群（ImageJはそれぞれ特定の機能をもつJavaでプログラムされたクラスが複数集まった存在であると考えると良い）を扱うには、クラス群の諸機能を参照するためのレファレンスが必要になる。Javadocと呼ばれる仕様書（ImageJの場合にはImageJのJavadoc）がこれにあたり、プログラミングの基本を習得したあとはJavadocを繰りながらスクリプトを書くことになる。ImageJのJavadocは次のリンク先にある。Javadocを読み解くには一定の知識が必要になるが、これは実際のコードを書き、実行しながら、少しずつ学んでいけるようにするつもりである。
+pyimagej · PyPI
+https://pypi.org/project/pyimagej/
+
+ImageJではJythonのファイルを実行した時にJythonのライブラリが存在しないことがわかると、ImageJはJythonのライブラリを自動的にダウンロードする。一方、Fijiでは最初からJythonが導入されている。以下ではFijiを使っていることを前提に説明をすすめる。理由は、コードを書いて実行する上できわめて優れた機能をもつエディタ（Script Editor）がFijiには付属しているからである。
+
+こうしたことからここではJythonによるスクリプティングを解説する。ImageJのさまざまなクラス群（ImageJはそれぞれ特定の機能をもつJavaでプログラムされたクラスが複数集まった存在であると考えると良い）を扱うには、クラス群の諸機能を参照するためのレファレンスが必要になる。Javadocと呼ばれる仕様書（ImageJの場合にはImageJのJavadoc）がこれにあたり、プログラミングの基本を習得したあとはJavadocを繰りながらスクリプトを書くことになる。ImageJのJavadocは次のリンク先にある。Javadocを読み解くには一定の知識が必要になるが、これは、以下の解説で実際のコードを書き、実行しながら、少しずつ学んでいけるようにするつもりである。
 
 [http://imagej.net/developer/api/](http://www.google.com/url?q=http%3A%2F%2Fimagej.net%2Fdeveloper%2Fapi%2F&sa=D&sntz=1&usg=AOvVaw1v6xdkr40Dui8Lv76D9sT6)
 
@@ -599,11 +604,9 @@ imp.updateAndDraw()
 
 ##### Javadocを読み解く：画素の統計値
 
-画像の平均輝度を知りたい、ヒストグラムを得たい、など、画素値の統計が必要になる状況には多く出くわすことになる。こうしたときには、ImageStatisticsクラスを使う。
+画像の平均輝度を知りたい、ヒストグラムを得たい、など、画素値の統計が必要になる状況には多く出くわすことになる。こうしたときには、ImageStatisticsクラスを使うとなにかと便利である。
 
-TBA
-
-
+TBA: 統計値を得る
 
 ### 静的メソッド
 
@@ -676,17 +679,51 @@ imp.show()
 ImageProcessor (ImageJ 1.53j API)
 https://javadoc.io/static/net.imagej/ij/1.53j/ij/process/ImageProcessor.html
 
-（のちに追記：ひとつのImageProcessorをふたつのImagePlusオブジェクトで共有する）
+
+---
+
+**演習**　ImageProcessorクラスには、`threshold`というメソッドと、`setThreshold`というメソッドがある。Javadocを参照にスクリプトを書き、ふたつのメソッドの機能の違いを説明せよ。
+
+---
+
+TBA：ひとつのImageProcessorをふたつのImagePlusオブジェクトで共有する
 
 Javaのプログラミングを知っている方のためにより詳細を述べると、ImageProcessorは抽象クラスであり、実装はByteProcessor, ColorProcessor, FloatProcessor, ShortProcessorという4つのクラスで行われている。画像のビット深度によって特異的に使うことのできるメソッドがあるので、この点、念頭に置いておくとよい。
 
 #### ImageStackクラス
+
+タイムラプスの動画や、立体３次元のデータは画像スタックになっていることが多い。これらはいずれも、２次元の画像を複数かさねた形式である。Fijiのサンプル画像では、たとえば[File > Open Samples > Bat Cochlea Volume]で、114枚の画像を重ねた画像スタックを眺めることができる。一枚一枚の画像をImageJでは「スライス」という。画像が複数含まれているこのような画像オブジェクトであっても、それはImagePlusオブジェクトである。そして、このオブジェクトでgetProcessor()を行うと、現在ディスプレイに表示されている一枚のスライスだけが取り出され、ほかのスライスを取り出すには、あらかじめマウスで別のスライスを表示させて、getProcessor()を行う必要がある。
+
+114枚の画像をすべて取り出すには、getStack()メソッドを使う。返り値はImageStackクラスのオブジェクトである。このクラスは、複数のImageProcessorオブジェクトを保持できるクラスであり、スライスのインデックスを指定してImageProcessorオブジェクトを抜き出すことができる。この抜き出しに使うのは、ImageStackクラスの`getProcessor(int n)`であり、引数でスライスのインデックスを指定する。
+
+ImageStack (ImageJ API)
+https://imagej.net/ij/developer/api/ij/ij/ImageStack.html
+
+![image-20231018171322122](fig/JAVADOC_ImageStack_getProcessor.png)
+
+次の例で見てみよう。画像スタックのちょうど真ん中の画像を取り出して、一枚だけ別のウィンドウで表示させるスクリプトである。
+
+```python
+from ij import ImagePlus
+
+imp = ImagePlus( "/Users/miura/samples/bat-cochlea-volume.tif" )
+stack = imp.getStack()
+slices = stack.getSize()
+mid = int( slices/2 )
+ip = stack.getProcessor( mid )
+oneslice = ImagePlus( "slice"+str(mid), ip)
+oneslice.show()
+```
+
+3行目でまず、ローカルに保存したBat Cochleaの画像ファイルから画像オブジェクトを生成する。そこから4行目でImageStackオブジェクトを抜き出す。5行目ではそのオブジェクトのメソッド、`getSize()`を使ってスライスの総数（つまりスタックの枚数）を取得する（114になるはずだが、これは表にでてこない）。ちょうど真ん中にあるスライスを抜き出すため、6行目で総数の半分のインデックスを計算する。ここではJythonのネイティブ関数`int`を使って、割り算の結果を整数に変換するが、もし結果がたとえば4.5のように小数点以下の値を保つ場合、切り捨てになる。整数に変換するのは、7行目で使う`getProcessor(int n)`の引数が整数であることが必要だからである。この7行目で、半分のインデックスのスライスのImageProcessorオブジェクトが抜き出される。8行目でこれをつかって、あらたにImagePlusオブジェクトをインスタンス化する。画像のタイトルに、抜き出した際のスライスのインデックスを含めるように、一番目の引数の文字列を構成している。2番目の引数は、7行目でに抜き出したImaageProcessorオブジェクトである。9行目では、この一枚だけの画像のImagePlusオブジェクトを画面上に表示する。
 
 ####  ImagePlusクラス
 
 `ImagePlus`はすでに紹介したように、画像そのものと画像の属性（スケールやmultitiff）などを含むクラスである。また、これは慣例的なことであるが、変数は`imp`とすることが多い。次のコードは、デスクトップ上に開いたスタック画像に関して、ループを使ってスタックの中の画像を一枚ごとに測定を行うコードである。
 
 ```python
+from ij import IJ
+
 imp = IJ.getImage()
 frames = imp.getStackSize()
 IJ.run("Set Measurements...", " mean redirect=None decimal=3")
@@ -696,13 +733,9 @@ for i in range(frames):
 	IJ.run("Measure")
 ```
 
-#### ChannelSplitterクラス
-
-TBA
-
 #### ProfilePlotクラス: 輝度プロファイルの例
 
-輝度プロファイルを得る場合には`ProfilePlot`クラスをインスタンス化する必要がある。このインスタンス化の際に、現在トップにある画像を指定すれば、そのまま輝度プロファイルを取得することができる。
+輝度プロファイルを得る場合には`ProfilePlot`クラスをインスタンス化する必要がある。このインスタンス化の際に、現在トップにある画像を指定（輝度を測定する場所を直線ROIで選択済みである必要がある）すれば、そのまま輝度プロファイルを取得することができる。
 ```python
 from ij import IJ
 from ij.gui import ProfilePlot
@@ -710,7 +743,7 @@ imp = IJ.getImage()
 pf = ProfilePlot(imp)
 profile = pf.getProfile()
 for val in profile:
-	print val
+	print( val )
 ```
 このスクリプトの結果をさらにCSVに出力してみる。Jythonの`csv`パッケージが簡便なのでそれを使おう。
 ```python
@@ -721,7 +754,7 @@ imp = IJ.getImage()
 pf = ProfilePlot(imp)
 profile = pf.getProfile()
 for val in profile:
-	print val
+	print( val )
 	
 f = open('/Users/miura/Desktop/prof.csv', 'wb')
 writer = csv.writer(f)
@@ -733,7 +766,47 @@ f.close()
 
 ## 自作関数
 
-TBA
+処理の工程が少々長く、まとめて1つの関数にしておきたい場合がある。たとえば、その工程を複数回使う場合には、同じコードをなんども書くという無駄を省くことができる。それでだけではなく、いくつもの工程を経て行う解析の場合、全体の流れを見やすくするために、ステップごとに関数を作る場合もある。たとえば、10の工程ステップがある場合、それぞれのステップを関数にすれば、その10個の関数をならべたメインの部分は、パッと見て流れがわかりやすくなる。アウトラインのようにコードを読むことができるからである。
+
+自作関数は次のようなシンタックスで書く。
+
+```python
+def 関数名（引数1, 引数2…）:
+  コード
+  コード
+  return xxx
+```
+
+`def`は関数を定義するという宣言であり、そのあとに任意の関数名、カッコの中に関数の内部で使う引数を宣言する。この行の行末は、コロン（:）で区切り、関数の内部は字下げで記述する。返り値を与えたい場合は、`return`で返すようにする。
+
+例えば、上で扱った輝度プロファイルのコードを、2つの自作関数からなるコードにしてみよう。次のようになる。
+
+```python
+from ij import IJ
+from ij.gui import ProfilePlot
+import csv
+
+def measureProfile( imp ):
+	pf = ProfilePlot(imp)
+	profile = pf.getProfile()
+	for val in profile:
+		print( val )
+	return profile
+
+def writeProfileToFile( profile,  path ):
+	f = open( path , 'wb')
+	writer = csv.writer(f)
+	for index, val in enumerate(profile):
+		writer.writerow([index, val])
+	f.close()
+	
+writepath = '/Users/miura/Desktop/prof.csv'
+imp = IJ.getImage()
+prof = measureProfile( imp )
+writeProfileToFile( prof,  writepath )
+```
+
+このように関数にまとめると、19行目から22行目が全体の処理になるが、作業工程のアウトラインとして読むことができる。読みやすくするため、関数の名前はできるだけその機能がわかるように名付けるとよい。
 
 ## ファイルシステムへのアクセス
 
