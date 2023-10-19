@@ -810,12 +810,16 @@ writeProfileToFile( prof,  writepath )
 
 このように関数にまとめると、19行目から22行目が全体の処理になるが、作業工程のアウトラインとして読むことができる。読みやすくするため、関数の名前はできるだけその機能がわかるように名付けるとよい。
 
-##　テクニック
+## テクニック
 
 ### ファイルのリスト
 
 ファイルシステムにアクセスしてファイルの名前のリストを取得してみよう。いくつもの方法があるが、ここではJythonに実装されている`os`パッケージの`os.walk`関数を使ってみる。
 ```python
+from ij import IJ
+from ij.io import DirectoryChooser
+import os
+
 srcDir = DirectoryChooser("please select a folder").getDirectory()
 IJ.log("directory: "+srcDir)
 for root, directories, filenames in os.walk(srcDir):
@@ -829,14 +833,14 @@ for root, directories, filenames in os.walk(srcDir):
 ```
 **コードの解説**
 
-一行目に登場する`DirectoryChooser`はImageJのクラスである。ここでは`DirectoryChooser`のインスタンス化と、そのメソッドの使用を一行で行なっていることに注意しよう。これは、次のように２行にわけて書くこともできる。
+5行目に登場する`DirectoryChooser`はImageJのクラスである。ここでは`DirectoryChooser`のインスタンス化と、そのメソッドの使用を一行で行なっていることに注意しよう。これは、次のように２行にわけて書くこともできる。
 
 ```
 dc = DirectoryChooser("please select a folder")
 srcDir = dc.getDirectory()
 ```
 
-一行目ではクラス`DirectoryChooser`のコンストラクタによるインスタンス化を行い、そのそのことで生成したオブジェクトを変数`dc`に代入する。二行目では、クラス`DirectoryChooser`のメソッドである`getDirectory()`を実行し、対象となるフォルダのパスをインタラクティブに取得する。元のコードの一行目では、この２つのステップが一行でなされている。コンストラクタによるインスタンス化とメッソッドの実行を一行で書いてしまう書き方はスクリプティング的である。Javaではこのようなことができない。
+1行目ではクラス`DirectoryChooser`のコンストラクタによるインスタンス化を行い、そのそのことで生成したオブジェクトを変数`dc`に代入する。2行目では、クラス`DirectoryChooser`のメソッドである`getDirectory()`を実行し、対象となるフォルダのパスをインタラクティブに取得する。元のコードの一行目では、この２つのステップが一行でなされている。コンストラクタによるインスタンス化とメッソッドの実行を一行で書いてしまう書き方はスクリプティング的である。Javaではこのようなことができない。
 
 `os.walk`の結果を`for`ループで展開するのは、ディレクトリを再帰的に探索するためである。
 
