@@ -810,9 +810,11 @@ writeProfileToFile( prof,  writepath )
 
 このように関数にまとめると、19行目から22行目が全体の処理になるが、作業工程のアウトラインとして読むことができる。読みやすくするため、関数の名前はできるだけその機能がわかるように名付けるとよい。
 
-## ファイルシステムへのアクセス
+##　テクニック
 
-さて、ファイルシステムにアクセスしてファイルの名前のリストを取得してみよう。いくつもの方法があるが、ここではJythonに実装されている`os`パッケージの`os.walk`関数を使う。少々長くなるが、コードの下に続く解説を読んでほしい。
+### ファイルのリスト
+
+ファイルシステムにアクセスしてファイルの名前のリストを取得してみよう。いくつもの方法があるが、ここではJythonに実装されている`os`パッケージの`os.walk`関数を使ってみる。
 ```python
 srcDir = DirectoryChooser("please select a folder").getDirectory()
 IJ.log("directory: "+srcDir)
@@ -838,6 +840,46 @@ srcDir = dc.getDirectory()
 
 `os.walk`の結果を`for`ループで展開するのは、ディレクトリを再帰的に探索するためである。
 
-## JythonのリストをJavaの配列に変換する手法
+### JythonのリストをJavaの配列に変換する手法
 
-TBA
+Jythonに実装されているリストは、Javaでいう配列と機能的には似ているが、それを実装したクラスはことなっており、ImageJやプラグインのクラスのメソッドで、配列が引数になっている場合、Jythonのリストをそのまま使うとエラーになってしまう。そこで、こうした場合にはJythonのリストをJavaに変換することが必要になる。この変換は、簡単な例で示すと次のようになる。
+
+```python
+import jarray
+ 
+#creat example data arrays
+xa = [1, 2, 3, 4]
+ya = [3, 3.5, 4, 4.5]
+ 
+#convert to java array
+jxa = jarray.array(xa, 'i')
+jya = jarray.array(ya, 'd')
+```
+
+こうした変換などを行う配列関連のメソッドを集めたのがjarrayパッケージで、上のコード1行目のようにまずこのパッケージをインポートしてから使う。変換にはjarray.arrayというメソッドを使う。1番目の引数はJythonのリスト、2番目の引数は配列の要素の型である。ネイティブな型は以下のように指定する。上の場合は、記号が`i`であれば、int型であり、Javaでいえば`int[]`という配列になる。`d`であればdouble型であり、`double[]`になる。
+
+| 記号 | 型      |
+| ---- | ------- |
+| z    | boolean |
+| c    | char    |
+| b    | byte    |
+| h    | short   |
+| i    | int     |
+| l    | long    |
+| f    | float   |
+| d    | double  |
+
+2番目の引数の型の指定は、上の表にあるようなネイティブな型だけではなく、クラス名でもよい。たとえば"ImagePlus"とすれば、要素をImagePlusオブジェクトとした配列`ImagePlus[]`になる。具体例を示そう。
+
+```python
+import jarray
+from ij import IJ
+from ij.plugin import RGBStackMerge
+ 
+imp1 = IJ.openImage(path1)
+imp2 = IJ.openImage(path2)
+imgarray = jarray.array([imp1, imp2], ImagePlus)
+colorimp = RGBStackMerge().mergeHyperstacks(imgarray, False)
+```
+
+このスクリプトは2枚の画像オブジェクトをRGB画像としてマージする、という工程で、このために、RGBStackMergeクラスのmergeHyperstacksメソッドを使う。このメソッドの1番目の引数は`ImagePlus[]`であることが必要なので、この配列を7行目で`jarray.array()`を使って用意している。
