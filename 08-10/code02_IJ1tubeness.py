@@ -3,13 +3,13 @@ from features import TubenessProcessor
 
 def tubenessFilter(filteredimp, sigma, useCalibration):
 	cal = filteredimp.getCalibration()
-
 	# check if sigma is larger than the resolution
 	minimumSeparation = min(cal.pixelWidth, cal.pixelHeight, cal.pixelDepth)
 	if sigma < minimumSeparation:
 		sigma = minimumSeparation
-	
-	tp = TubenessProcessor(sigma, useCalibration)
+
+	tp = TubenessProcessor(useCalibration)
+	tp.setSigma(sigma)
 	result = tp.generateImage(filteredimp)
 	return result
 
