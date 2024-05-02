@@ -7,10 +7,11 @@ def tubenessFilter(filteredimp, sigma, useCalibration):
 	minimumSeparation = min(cal.pixelWidth, cal.pixelHeight, cal.pixelDepth)
 	if sigma < minimumSeparation:
 		sigma = minimumSeparation
-
+ 
 	tp = TubenessProcessor(useCalibration)
 	tp.setSigma(sigma)
 	result = tp.generateImage(filteredimp)
+	result.setCalibration(cal)
 	return result
 
 useCalibration = True
