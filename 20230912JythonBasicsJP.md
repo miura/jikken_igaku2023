@@ -861,7 +861,7 @@ aa_squared2 = map( lambda v : pow(v, 2), aa )
 print( aa_squared2 )
 ```
 
-かなり異なる別の手法でも、同じようなことができる。list記法（list comprehension）と呼ばれる書き方で、次のように書く。
+かなり異なる別の手法でも、同じようなことができる。リスト内包記法（list comprehension）と呼ばれる書き方で、次のように書く。
 
 ```python
 aa = [1, 2, 3, 4]
@@ -875,13 +875,13 @@ print( aa_squared3 )
 [ <<関数(v, ....)>>　for v in <<リスト>> ]
 ```
 
-という形式で書く。上で紹介したmap関数を使った文字列への変換を、list記法を使うと
+という形式で書く。上で紹介したmap関数を使った文字列への変換を、リスト内包記法を使うと
 
 ```python
 [ str( v ) for v in aa]
 ```
 
-という書き方になる。
+という書き方になる。なれないと謎めいたコードに見えてしまうが、英語の文章として"Create a new list by function str for each value v in list aa"といったように、読み下せる書き方なので、一度慣れてしまうと読みやすい。
 
 
 
