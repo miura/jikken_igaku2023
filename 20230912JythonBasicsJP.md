@@ -846,7 +846,7 @@ def squared( v ):
 aa_squared = map( squared, aa )
 print( aa_squared )
 ```
-この例では、まず`squared`という自作関数を定義する。引数の数値を自乗したものを返り血とする。この関数をmap関数の第1引数にし、第2引数を数字の配列とすれば、要素を自乗したリストをえることができる。
+この例では、まず`squared`という自作関数を定義する。引数の数値を自乗したものを返り値とする。この関数をmap関数の第1引数にし、第2引数を数字の配列とすれば、要素を自乗したリストをえることができる。
 ```
 Started New_.py at Fri May 03 04:56:27 JST 2024
 [1, 2, 3, 4]
@@ -881,7 +881,7 @@ print( aa_squared3 )
 [ str( v ) for v in aa]
 ```
 
-という書き方になる。なれないと謎めいたコードに見えてしまうが、英語の文章として"Create a new list by function str for each value v in list aa"といったように、読み下せる書き方なので、一度慣れてしまうと読みやすい。
+という書き方になる。なれないと謎めいたコードに見えてしまうが、英語の文章として"Create a new list by applying function `str` for each value `v` in list `aa`"といったように、読み下せる書き方なので、一度慣れてしまうと読みやすい。
 
 
 
