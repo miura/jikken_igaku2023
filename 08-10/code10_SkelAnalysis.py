@@ -84,7 +84,7 @@ print("Junction Density: " + \\
 	str(junctionDensity) + " (/mm^3)")
 print("Average Tortuosity: " + str(ave_tortuosity))
 
-### visalization
+### visualization
 import  Replace_Value
 from ij.plugin import LutLoader
 from ij.process import LUT
